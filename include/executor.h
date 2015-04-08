@@ -20,6 +20,10 @@ class executor_wrapper {
  public:
   executor_wrapper(Exec& exec, Func&& func)
     : exec_(exec), func_(forward<Func>(func)) {}
+
+  executor_wrapper(executor_wrapper&& other)
+    : exec_(other.exec_), func_(forward<Func>(other.func_)) {}
+
   ~executor_wrapper() {}
     
   template <class ...Args>
@@ -107,7 +111,10 @@ class executor {
   typedef function_wrapper wrapper_type;
  public:
   executor() = delete;
-  executor(executor& other) = delete;
+  executor(const executor& other) : exec_(other.exec_) {}
+  executor(executor&& other) : exec_() {
+    other.exec_.swap(exec_);
+  }
 
   template <typename Exec>
   executor(Exec& exec) : exec_(new executor_reference<Exec>(exec)) {}
@@ -134,7 +141,7 @@ class executor {
     Exec& exec_;
   };
 
-  unique_ptr<executor_concept> exec_;
+  shared_ptr<executor_concept> exec_;
 };
 
 // Small helper to create a packaged task on behalf of a given function.
