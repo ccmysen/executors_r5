@@ -48,7 +48,7 @@ TEST(ExecutorTest, SpawnFuture) {
   constexpr int NUM_ITER = 100;
   vector<future<int>> futures;
   for (int i = 0; i < NUM_ITER; ++i) {
-    futures.emplace_back(move(experimental::spawn_future(tpte,
+    futures.emplace_back(move(experimental::spawn(tpte,
         experimental::make_package(bind(&get_next_id, ref(id_gen))))));
   }
 
@@ -72,7 +72,7 @@ TEST(ExecutorTest, ExecutorRefSpawnFuture) {
   constexpr int NUM_ITER = 100;
   set<int> ids;
   for (int i = 0; i < NUM_ITER; ++i) {
-    auto fut = experimental::spawn_future(tpte_ref,
+    auto fut = experimental::spawn(tpte_ref,
         experimental::make_package(bind(&get_next_id, ref(id_gen))));
     ids.insert(fut.get());
   }
@@ -95,9 +95,9 @@ TEST(ExecutorTest, ExecutorRefCopy) {
   constexpr int NUM_ITER = 100;
   set<thread::id> ids;
   for (int i = 0; i < NUM_ITER; ++i) {
-    auto fut = experimental::spawn_future(tpe_ref,
+    auto fut = experimental::spawn(tpe_ref,
         experimental::make_package(&get_id));
-    auto fut2 = experimental::spawn_future(tpe_ref2,
+    auto fut2 = experimental::spawn(tpe_ref2,
         experimental::make_package(&get_id));
 
     ids.insert(fut.get());
@@ -137,4 +137,10 @@ TEST(ExecutorTest, ErasedExecutors) {
 
 TEST(ExecutorTest, SpawnContinuation) {
   experimental::thread_pool_executor tpe(1);
+  // TODO(mysen): add a test here
+}
+
+TEST(ExecutorTest, BaseSpawn) {
+  experimental::thread_pool_executor tpe(1);
+  // TODO(mysen): add a test here
 }

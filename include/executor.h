@@ -141,7 +141,7 @@ auto make_package(Func&& f) -> packaged_task<decltype(f())()> {
 }
 
 template <typename Exec, typename T>
-inline future<T> spawn_future(Exec&& exec, packaged_task<T()>&& func) {
+inline future<T> spawn(Exec&& exec, packaged_task<T()>&& func) {
   future<T> result = func.get_future();
   exec.spawn(forward<packaged_task<T()>>(func));
   return result;
@@ -159,6 +159,12 @@ template <typename Func, typename Continuation>
 void spawn(executor&& exec, Func&& func, Continuation&& continuation) {
   exec.spawn(function_wrapper([&] { func(); continuation(); }));
 }
+
+template <typename Func>
+void spawn(executor&& exec, Func&& func) {
+  exec.spawn(func);
+}
+
 
 }  // namespace experimental
 }  // namespace std
