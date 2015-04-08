@@ -1,7 +1,9 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
+#include <functional>
 #include <future>
+#include <type_traits>
 #include <utility>
 
 #include "executor_helper.h"
@@ -14,15 +16,16 @@ namespace experimental {
 // which just spawns the task on a particular executor when called. Useful for
 // creating continuations which spawn tasks when they complete.
 template <typename Exec, typename Func>
-class task_wrapper {
+class executor_wrapper {
  public:
-  task_wrapper(Exec& exec, Func&& func)
+  executor_wrapper(Exec& exec, Func&& func)
     : exec_(exec), func_(forward<Func>(func)) {}
-  ~task_wrapper() {}
+  ~executor_wrapper() {}
     
-  void operator()() {
+  template <class ...Args>
+  void operator()(Args... args) {
     // Probably not the perfect thing to make func an rvalue reference here?
-    exec_.spawn(contained_function());
+    exec_.spawn(bind(contained_function(), args...));
   }
 
   Exec& get_executor() {
@@ -39,9 +42,10 @@ class task_wrapper {
   Func func_;
 };
 
+// TODO(mysen): add some tests for wrap
 template <typename Exec, typename Func>
-task_wrapper<Exec, Func>&& set_executor(Exec& exec, Func&& func) {
-  return task_wrapper<Exec, Func>(exec, forward<Func>(func));
+executor_wrapper<Exec, typename decay<Func>::type>&& wrap(Exec& exec, Func&& func) {
+  return executor_wrapper<Exec, Func>(exec, forward<Func>(func));
 }
 
 // Helper which contains an executor in a reference for easy copyability.
